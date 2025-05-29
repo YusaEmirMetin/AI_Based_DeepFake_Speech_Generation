@@ -1,0 +1,7 @@
+streamlit
+TTS
+librosa
+matplotlib
+numpy
+Pillow
+
