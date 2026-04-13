@@ -31,6 +31,10 @@ if st.button("🧠 Default Speech"):
     tts.tts_to_file(text=text_input, file_path=output_path)
     st.audio(output_path)
     st.success("Default Speech generated!")
+    
+    # Download button
+    with open(output_path, "rb") as f:
+        st.download_button("Download Default Speech", f, file_name="default_speech.wav", mime="audio/wav")
 
 # Clone Speech
 if st.button("🧬 Clone Speech"):
@@ -44,6 +48,10 @@ if st.button("🧬 Clone Speech"):
             tts.tts_to_file(text=text_input, speaker_wav=temp_wav_path, language="en", file_path=output_path)
             st.audio(output_path)
             st.success("Cloned Speech generated!")
+            
+            # Download button
+            with open(output_path, "rb") as f:
+                st.download_button("Download Cloned Speech", f, file_name="cloned_speech.wav", mime="audio/wav")
         except Exception as e:
             st.error(f"Error cloning Speech: {e}")
     else:
