@@ -1,7 +1,8 @@
 streamlit
-TTS
+TTS==0.10.3
+numpy
 librosa
 matplotlib
-numpy
 Pillow
-
+torch
+torchaudio
