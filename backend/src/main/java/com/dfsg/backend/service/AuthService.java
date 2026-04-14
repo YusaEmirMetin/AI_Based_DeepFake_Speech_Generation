@@ -17,37 +17,35 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository repository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
+        private final UserRepository repository;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtUtil jwtUtil;
+        private final AuthenticationManager authenticationManager;
 
-    public AuthResponse register(RegisterRequest request) {
-        var user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-        repository.save(user);
-        var jwtToken = jwtUtil.generateToken(user);
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .build();
-    }
+        public AuthResponse register(RegisterRequest request) {
+                var user = User.builder()
+                                .username(request.getUsername())
+                                .email(request.getEmail())
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .role(Role.USER)
+                                .build();
+                repository.save(user);
+                var jwtToken = jwtUtil.generateToken(user);
+                return AuthResponse.builder()
+                                .token(jwtToken)
+                                .build();
+        }
 
-    public AuthResponse authenticate(AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
-        var user = repository.findByUsername(request.getUsername())
-                .orElseThrow();
-        var jwtToken = jwtUtil.generateToken(user);
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .build();
-    }
+        public AuthResponse authenticate(AuthRequest request) {
+                authenticationManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(
+                                                request.getUsername(),
+                                                request.getPassword()));
+                var user = repository.findByUsername(request.getUsername())
+                                .orElseThrow();
+                var jwtToken = jwtUtil.generateToken(user);
+                return AuthResponse.builder()
+                                .token(jwtToken)
+                                .build();
+        }
 }
