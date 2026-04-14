@@ -5,19 +5,24 @@ import com.dfsg.backend.dto.AuthResponse;
 import com.dfsg.backend.dto.RegisterRequest;
 import com.dfsg.backend.model.Role;
 import com.dfsg.backend.model.User;
+import com.dfsg.backend.repository.GenerationLogRepository;
 import com.dfsg.backend.repository.UserRepository;
 import com.dfsg.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.dfsg.backend.dto.UserProfileDTO;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
         private final UserRepository repository;
+        private final GenerationLogRepository logRepository;
         private final PasswordEncoder passwordEncoder;
         private final JwtUtil jwtUtil;
         private final AuthenticationManager authenticationManager;
@@ -46,6 +51,19 @@ public class AuthService {
                 var jwtToken = jwtUtil.generateToken(user);
                 return AuthResponse.builder()
                                 .token(jwtToken)
+                                .build();
+        }
+
+        public UserProfileDTO getProfile() {
+                String username = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
+                User user = repository.findByUsername(username).orElseThrow();
+                long generationCount = logRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).size();
+                
+                return UserProfileDTO.builder()
+                                .username(user.getUsername())
+                                .email(user.getEmail())
+                                .role(user.getRole().name())
+                                .totalGenerations(generationCount)
                                 .build();
         }
 }

@@ -29,4 +29,13 @@ public class AuthController {
             @RequestBody AuthRequest request) {
         return ResponseEntity.ok(service.authenticate(request));
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/me")
+    public ResponseEntity<?> getProfile() {
+        try {
+            return ResponseEntity.ok(service.getProfile());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
