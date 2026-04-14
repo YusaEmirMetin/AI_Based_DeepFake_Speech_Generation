@@ -1,177 +1,108 @@
-# DFSG - Complete Setup Guide
+# DFSG - Detaylı Kurulum Kılavuzu
 
-## 🎯 Project Architecture
+Bu kılavuz, sistemin tüm bileşenlerini hatasız bir şekilde ayağa kaldırmanız için gereken teknik adımları içerir.
 
-```
-DFSG (DeepFake Speech Generator)
-├── Frontend (React + Vite) → Port 5173
-├── Backend (Spring Boot) → Port 8080
-├── AI Engine (FastAPI) → Port 8000
-└── Streamlit App → Port 8501
-```
+## Sistem Mimarisi
 
----
+Sistem aşağıdaki portlar üzerinden haberleşen dört ana parçadan oluşur:
 
-## ✅ Prerequisites Check
-
-### 1. Java 21
-```bash
-java -version
-```
-
-### 2. Node.js & npm
-```bash
-node -v
-npm -v
-```
-
-### 3. Python 3.10+
-```bash
-python3 --version
-```
-
-### 4. PostgreSQL
-```bash
-which psql
-```
+- **Frontend (React + Vite):** Port 5173
+- **Backend (Spring Boot):** Port 8080
+- **AI Engine (FastAPI):** Port 8001
+- **Veritabanı (PostgreSQL - Docker):** Port 5432
 
 ---
 
-## 📦 Installation & Startup
+## Ön Gereksinimler
 
-### Step 1: Database Setup
+Kuruluma başlamadan önce bilgisayarınızda aşağıdaki araçların yüklü olduğundan emin olun:
+
+- **Java 21:** `java -version`
+- **Node.js & npm:** `node -v` ve `npm -v`
+- **Python 3.10+:** `python3 --version`
+- **Docker & Docker Desktop:** Veritabanını çalıştırmak için gereklidir.
+
+---
+
+## Kurulum ve Başlatma
+
+### 1. Adım: Veritabanı Kurulumu (Docker)
+Docker Desktop uygulamasını açın. Proje ana dizininde bir terminal açarak şu komutu çalıştırın:
 ```bash
-# Create PostgreSQL database
-createdb dfsg_db
-
-# If needed, reset the database:
-# dropdb dfsg_db
-# createdb dfsg_db
+docker compose up -d
 ```
+Veritabanı hazır hale gelecektir. Bilgiler: DB Name: `dfsg_db`, User/Pass: `postgres/postgres`.
 
-### Step 2: Backend Setup (Spring Boot)
+### 2. Adım: Backend Kurulumu (Spring Boot)
+Yeni bir terminalde backend dizinine girin ve uygulamayı başlatın:
 ```bash
 cd backend
-mvn clean install
-mvn spring-boot:run
+./mvnw clean install
+./mvnw spring-boot:run
 ```
-✅ Backend will run on: http://localhost:8080
+Java sunucusu http://localhost:8080 üzerinde çalışmaya başlayacaktır. Veritabanı tabloları otomatik olarak oluşturulur.
 
-### Step 3: AI Engine Setup (FastAPI)
+### 3. Adım: AI Engine Kurulumu (FastAPI)
+Ayrı bir terminalde ai-engine dizinine girin, sanal ortamı oluşturun ve servisleri başlatın:
 ```bash
 cd ai-engine
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate  # Windows için: venv\Scripts\activate
 pip install -r requirements.txt
 python main.py
 ```
-✅ AI Engine will run on: http://localhost:8000
+AI servisi http://localhost:8001 üzerinde aktif olacaktır. İlk açılışta XTTSv2 modelini (~2GB) indirecektir.
 
-### Step 4: Frontend Setup (React + Vite)
+### 4. Adım: Frontend Kurulumu (React + Vite)
+Son terminal penceresinde frontend dizinine girin ve arayüzü başlatın:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-✅ Frontend will run on: http://localhost:5173
+Kullanıcı arayüzüne http://localhost:5173 üzerinden erişebilirsiniz.
 
-### Step 5: Streamlit App (Optional)
+---
+
+## Yapılandırma Detayları
+
+### Backend Ayarları
+`backend/src/main/resources/application.properties` dosyası üzerinden şu ayarlar kontrol edilebilir:
+- Veritabanı bağlantı adresi
+- JWT Gizli Anahtarı
+- CORS (Frontend erişim izinleri)
+
+### Frontend Ayarları
+React uygulamasındaki API çağrıları `http://localhost:8080` adresindeki backend servisine yönlendirilmiştir.
+
+---
+
+## Sorun Giderme
+
+### Port Hatası (Port already in use)
+Eğer 8080, 8001 veya 5173 portları doluysa, çalışan eski süreçleri kapatmanız gerekir:
 ```bash
-cd ..
-python3 -m venv streamlit-env
-source streamlit-env/bin/activate
-pip install -r requirements.txt
-streamlit run DFSG.py
-```
-✅ Streamlit will run on: http://localhost:8501
-
----
-
-## 🔧 Configuration
-
-### Backend Properties
-`backend/src/main/resources/application.properties`:
-```properties
-Database: localhost:5432/dfsg_db
-Username: postgres
-Password: postgres
-JWT Secret: configured
-Frontend CORS: http://localhost:5173
+lsof -i :8080  # Backend sürecini bulur
+kill -9 <PID>  # Süreci sonlandırır
 ```
 
-### Frontend - API Base URL
-Verify that the frontend is configured to call backend on `http://localhost:8080`
-
-### AI Engine - CORS
-Already enabled for local development
+### Model İndirme Sorunu (AI Engine)
+XTTSv2 modeli yaklaşık 2GB boyutundadır. İndirme sırasında internet bağlantınızın kesilmemesine ve diskte yeterli alan (en az 4GB) olduğundan emin olun.
 
 ---
 
-## 🌐 Access Points
-
-| Service | URL | Purpose |
-|---------|-----|---------|
-| Frontend | http://localhost:5173 | React Dashboard |
-| Backend API | http://localhost:8080 | Spring Boot REST API |
-| AI Engine | http://localhost:8000 | FastAPI TTS Microservice |
-| AI Engine Docs | http://localhost:8000/docs | Swagger API Docs |
-| Streamlit | http://localhost:8501 | Streamlit TTS Interface |
-
----
-
-## 🐛 Troubleshooting
-
-### PostgreSQL Connection Error
-```bash
-# Check if PostgreSQL is running
-psql -U postgres -d dfsg_db -c "SELECT 1"
-```
-
-### Port Already in Use
-```bash
-# Find and kill process on port
-lsof -i :8080  # Backend
-lsof -i :8000  # AI Engine
-lsof -i :5173  # Frontend
-```
-
-### Model Download Issue (AI Engine)
-First run will download XTTSv2 model (~2GB). Be patient and ensure you have:
-- Stable internet connection
-- ~3GB free disk space
-- GPU recommended (but CPU works, slower)
-
----
-
-## 📝 Development Notes
-
-- **Frontend**: Uses React Router for navigation (LoginPage, RegisterPage, Dashboard)
-- **Backend**: Spring Security with JWT Authentication
-- **AI Engine**: FastAPI with CORS enabled for all origins
-- **Database**: PostgreSQL with Hibernate ORM
-
----
-
-## 🆘 Quick Commands Reference
+## Hızlı Başlatma Komut Özetleri
 
 ```bash
-# Terminal 1: Backend
-cd backend && mvn spring-boot:run
+# Terminal 1: Veritabanı
+docker compose up -d
 
-# Terminal 2: AI Engine
-cd ai-engine
-source venv/bin/activate
-python main.py
+# Terminal 2: Java (Backend)
+cd backend && ./mvnw spring-boot:run
 
-# Terminal 3: Frontend
-cd frontend
-npm run dev
+# Terminal 3: Python (AI Engine)
+cd ai-engine && source venv/bin/activate && python main.py
 
-# Terminal 4: Streamlit (optional)
-source streamlit-env/bin/activate
-streamlit run DFSG.py
+# Terminal 4: React (Frontend)
+cd frontend && npm run dev
 ```
-
----
-
-Enjoy! 🎉

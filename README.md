@@ -1,47 +1,69 @@
-# 🧠 AI-Based DeepFake Speech Generator (DFSG)
+# Yapay Zeka Tabanlı Derin Sahte Ses Üretimi (DFSG)
 
-This project is a **DeepFake Speech Generation** system that takes user input text and either:
-- Synthesizes audio using a pretrained **Tacotron2-DDC** voice, or
-- Clones the user’s voice from a short `.wav` sample using **YourTTS**.
+Bu proje, orijinal bir derin sahte (DeepFake) ses üretim scriptinin modern, çok katmanlı ve kurumsal düzeyde bir web uygulamasına dönüştürülmüş halidir. Kullanıcılar metin girdileri sağlayarak ve kısa bir ses örneği yükleyerek, XTTSv2 modelinin gücüyle saniyeler içinde ses klonlaması yapabilirler.
 
-The system also provides a **mel-spectrogram visualization** for analysis, useful in both **generation quality** and **deepfake detection** research.
+## Sistem Mimarisi
 
----
+Uygulama, Agile (Çevik) yazılım geliştirme prensiplerine uygun olarak dört ana sprint aşamasında geliştirilmiştir:
 
-## Features
+- **Frontend:** ReactJS ve Vite kullanılarak modern, karanlık tema (Dark/Neon) odaklı bir arayüz inşa edilmiştir.
+- **Backend:** Java 21 ve Spring Boot 3.x ile kullanıcı yönetimi, JWT tabanlı güvenlik ve veritabanı entegrasyonu sağlanmıştır.
+- **AI Engine:** Python FastAPI mikroservisi, XTTSv2 modelini kullanarak asenkron ses sentezleme ve klonlama işlemlerini yürütür.
+- **Veritabanı:** PostgreSQL, kullanıcı verilerini ve üretim günlüklerini saklamak için Docker üzerinde koşturulmaktadır.
 
-- **Text-to-Speech (TTS)** using [Coqui TTS](https://github.com/coqui-ai/TTS)
-- **Voice cloning** using multilingual `YourTTS`
--Streamlit interface for real-time interaction
-- Mel-spectrogram display using Librosa + Matplotlib
+## Temel Özellikler
 
----
+- **Ses Klonlama:** Sadece 3-5 saniyelik bir referans .wav dosyası ile hedef metni o sesle seslendirme.
+- **Güvenli Kimlik Doğrulama:** JWT (JSON Web Token) tabanlı giriş ve kayıt sistemi.
+- **Görsel Analiz:** Ses üretimi sırasında dinamik Mel-Spektrogram dalga boyu görselleştirmesi.
+- **Üretim Geçmişi:** Kullanıcıların daha önce ürettiği sesleri listeleyebileceği ve tekrar dinleyebileceği geçmiş modülü.
+- **Profil Yönetimi:** Kullanıcı istatistiklerini ve bilgilerini içeren profil sekmesi.
 
-## Important Notes on Deployment
+## Kurulum ve Çalıştırma
 
-### Streamlit Cloud 
-> Due to system limitations, **Coqui TTS (TTS)** cannot be installed on Streamlit Cloud.
+Sistemi tam fonksiyonel olarak çalıştırmak için aşağıdaki üç bileşenin de aktif olması gerekmektedir:
 
-You can still deploy and show the interface **without TTS functionality**. The app will load but audio generation won’t work unless run locally or on GPU-enabled environments.
-
----
-
-## Run Locally (Recommended for Full Functionality)
-
-### 1. Create virtual environment
-
+### 1. Veritabanı ve Altyapı
+Docker Desktop yüklü olmalıdır. Proje kök dizininde aşağıdaki komutu çalıştırarak PostgreSQL veritabanını ayağa kaldırın:
 ```bash
-python -m venv tts-env
-source tts-env/bin/activate  # Windows: tts-env\Scripts\activate
+docker compose up -d
+```
 
+### 2. Backend (Spring Boot)
+Backend dizinine girin ve Maven wrapper üzerinden uygulamayı başlatın:
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+Servis varsayılan olarak http://localhost:8080 portunda çalışacaktır.
 
-**2. Install dependencies**
+### 3. AI Engine (FastAPI)
+Python ortamını hazırlayın ve mikroservisi başlatın:
+```bash
+cd ai-engine
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py
+```
+Servis http://localhost:8001 portunda çalışacaktır. (Not: İlk çalıştırmada model dosyaları indirileceği için bir süre bekletebilir.)
 
-pip install -U pip setuptools wheel  
-pip install TTS==0.10.3  
-pip install torch==1.12.1 torchaudio==0.12.1  
-pip install streamlit librosa==0.9.2 matplotlib numpy Pillow
+### 4. Frontend (React)
+Arayüzü başlatmak için frontend dizinine girin:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Uygulamaya tarayıcınızdan http://localhost:5173 üzerinden erişebilirsiniz.
 
-**3. Run the app**
+## Teknolojik Araçlar
 
-streamlit run DFSG.py
+- **Backend:** Spring Boot, Spring Security, JPA, JWT, Maven.
+- **Frontend:** ReactJS, Vite, Vanilla CSS, Web Audio API (Canvas visualization).
+- **AI:** Python, FastAPI, Coqui XTTSv2, PyTorch.
+- **Veri:** PostgreSQL, Docker.
+
+---
+
+Bu proje eğitim ve araştırma amaçlı geliştirilmiştir. Derin sahte ses teknolojilerinin etik kullanım kurallarına uygun olarak kullanılması tavsiye edilir.
